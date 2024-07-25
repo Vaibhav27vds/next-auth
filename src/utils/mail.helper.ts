@@ -1,27 +1,46 @@
+import User from "@/models/userModel"
 import nodemailer from "nodemailer"
+import bcryptjs from "bcryptjs"
 
 export const sendEmail = async ({email, emailType, userId}:any) => {
     try {
 
+       const hashedToken =  await bcryptjs.hash(userId.toString(), 10)
+
         //TODO: configure mail for usage
-        const transporter = nodemailer.createTransport({
-            host: "smtp.ethereal.email",
-         port: 587,
-         secure: false, // Use `true` for port 465, `false` for all other ports
-         auth: {
-           user: "maddison53@ethereal.email",
-           pass: "jn7jnAPss4f63QBp6D",
-         },
-        })
+
+        if(emailType === "Verify"){
+            await User.findByIdAndUpdate(userId, {
+                verifyToken : hashedToken,
+                verifyTokenExpiry: Date.now() + 3600000,
+            })
+        }
+        else if(emailType === "RESET"){
+            await User.findByIdAndUpdate(userId, {
+                forgotPasswordToken : hashedToken,
+                forgotPasswordExpiry: Date.now() + 3600000,
+            })
+        }
+        const transport = nodemailer.createTransport({
+            host: "sandbox.smtp.mailtrap.io",
+            port: 2525,
+            auth: {
+              user: "516f2f0709c7a9",
+              pass: "92899f3b828808"
+            }
+          });
 
         const mailOptions = {
             from: 'vds@gmail.com', // sender address
             to: email, // list of receivers
             subject: emailType === "VERIFY" ? "Verify your email" : "Reset your password" ,
-            html: "<b>Hello world?</b>", // html body
+            html: `<p> Click <a href="">here.</a> to ${emailType === "VERIFY" ? "verify your email" : "reset your password"}
+            or copy and paste the link below in your browser.
+            <br>
+            </p>`, 
           }
 
-          const mailResponse = await transporter.sendMail(mailOptions)
+          const mailResponse = await transport.sendMail(mailOptions)
 
           return mailResponse;
 

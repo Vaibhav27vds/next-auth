@@ -9,16 +9,20 @@ export const sendEmail = async ({email, emailType, userId}:any) => {
 
         //TODO: configure mail for usage
 
-        if(emailType === "Verify"){
+        if(emailType === "VERIFY"){
             await User.findByIdAndUpdate(userId, {
+                $set: {
                 verifyToken : hashedToken,
                 verifyTokenExpiry: Date.now() + 3600000,
+                }
             })
         }
         else if(emailType === "RESET"){
             await User.findByIdAndUpdate(userId, {
+                $set: {
                 forgotPasswordToken : hashedToken,
                 forgotPasswordExpiry: Date.now() + 3600000,
+                }
             })
         }
         const transport = nodemailer.createTransport({

@@ -17,7 +17,10 @@ export async function POST(request: NextRequest){
             return NextResponse.json({error: "User does not exist"}, {status:400})
         }
 
-        const validPassword = bcryptjs.compare(password, user.password)
+        const validPassword = await bcryptjs.compare(password, user.password)
+
+        console.log(validPassword);
+        
 
         if(!validPassword) {
             return NextResponse.json({error: "Invalid password"}, {status: 400})
@@ -29,7 +32,7 @@ export async function POST(request: NextRequest){
             username: user.username
         }
 
-        const token = jwt.sign(tokenData, process.env.TOKEN_SECRET!, {expiresIn: '1d'})
+        const token = await jwt.sign(tokenData, process.env.TOKEN_SECRET!, {expiresIn: "1d"})
 
         const response = NextResponse.json({
             message:"Logged In Successfully",
@@ -37,6 +40,8 @@ export async function POST(request: NextRequest){
         })
 
         response.cookies.set("token", token, {httpOnly:true})
+
+        return response
 
     } catch (error:any) {
         return NextResponse.json({error: error.message}, {status:500})
